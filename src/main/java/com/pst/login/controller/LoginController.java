@@ -18,5 +18,4 @@ public class LoginController {
     public String generateAndSendOtp(@PathVariable long aadhaarNumber) {
         return loginService.generateAndSendOtp(aadhaarNumber);
     }
-
 }

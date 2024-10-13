@@ -3,14 +3,12 @@ package com.pst.login.request;
 import com.pst.login.response.UserResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.sql.Blob;
 import java.sql.Date;
 
 @NoArgsConstructor
 @Data
 public class UserRequest {
-
     private long aadhaarNumber;
     private String userFirstName;
     private String userLastName;
@@ -54,5 +52,4 @@ public class UserRequest {
         this.createdAt = userResponse.getCreatedAt();
         this.updatedAt = userResponse.getUpdatedAt();
     }
-
 }

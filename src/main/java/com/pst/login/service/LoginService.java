@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.Random;
 
 @Service
@@ -35,15 +34,11 @@ public class LoginService {
         UserRequest userRequest = new UserRequest(userResponse);
         userRequest.setOtp(otp);
 
-
         restTemplate.put(userServiceUrl + "/update-user/" + aadhaarNumber, userRequest, UserResponse.class);
 
         EmailRequest emailRequest = new EmailRequest(userResponse.getEmail(), "Your OTP Code", "Your OTP is: " + otp);
         String messageServiceResponse = restTemplate.postForObject(messageServiceUrl, emailRequest, String.class);
 
-
         return (messageServiceResponse == null) ? "Failed to send OTP" : "OTP sent to: " + userResponse.getEmail();
-
     }
-
 }
