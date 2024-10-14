@@ -24,6 +24,7 @@ public class UserRequest {
     private String state;
     private String country;
     private int otp;
+    private String password;
     private Blob photo;
     private String createdBy;
     private String updatedBy;
@@ -46,6 +47,7 @@ public class UserRequest {
         this.pin = userResponse.getPin();
         this.state = userResponse.getState();
         this.country = userResponse.getCountry();
+        this.password = userResponse.getPassword();
         this.photo = userResponse.getPhoto();
         this.createdBy = userResponse.getCreatedBy();
         this.updatedBy = userResponse.getUpdatedBy();
