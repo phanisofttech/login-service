@@ -19,7 +19,12 @@ public class LoginController {
         return loginService.generateAndSendOtp(aadhaarNumber);
     }
     
-    /** It generates and send the password via email and also Stored in database **/
+    /**
+     * It generates and send the password via email and also Stored in database 
+     * @param aadhaarNumber
+     * @param otp
+     * @return String
+     */
    	@PostMapping("/password/{aadhaarNumber}/{otp}")
    	public String generateAndSendPassword(@PathVariable long aadhaarNumber, @PathVariable int otp) {
    		return loginService.generateAndSendPassword(aadhaarNumber, otp);
