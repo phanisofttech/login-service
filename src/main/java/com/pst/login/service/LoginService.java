@@ -68,7 +68,7 @@ public class LoginService {
 
 		ResponseEntity<UserResponse> userApiResponse = restTemplate.getForEntity(userApiUrl, UserResponse.class);
 
-		if (userApiResponse.getBody() == null && !userApiResponse.getStatusCode().is2xxSuccessful()) {
+		if (userApiResponse.getBody() == null) {
 			return "User Not Found With The Given Aadhaar Number";
 		}
 
@@ -89,7 +89,7 @@ public class LoginService {
 				requestEntity, 
 				UserResponse.class);
 		
-		if (userApiUpdateResponse.getBody() == null && !userApiUpdateResponse.getStatusCode().is2xxSuccessful()) {
+		if (userApiUpdateResponse.getBody() == null) {
 			return "Password not updated";
 		}
 
@@ -100,7 +100,7 @@ public class LoginService {
 
 		ResponseEntity<String> emailApiResponse = restTemplate.postForEntity(messageServiceUrl, emailRequest,
 				String.class);
-		if (emailApiResponse.getBody()== null && !emailApiResponse.getStatusCode().is2xxSuccessful()) {
+		if (emailApiResponse.getBody().isEmpty()) {
 			return "Email not Sent";
 		} else {
 			return "Password Sent to " + emailRequest.getToEmail() + " ! Check Once ";
