@@ -61,16 +61,14 @@ public class LoginService {
         return (messageServiceResponse == null) ? "Failed to send OTP" : "OTP sent to: " + userResponse.getEmail();
     }
     
-    /**
-	 * It generates the password and it will send to the email
-	 **/
-	public String createAndSendPassword(long aadhaarNumber, int otp) {
+	/**It generates the password and it will send to the email**/
+	public String generateAndSendPassword(long aadhaarNumber, int otp) {
 
 		String userApiUrl = userServiceUrl + aadhaarNumber;
 
 		ResponseEntity<UserResponse> userApiResponse = restTemplate.getForEntity(userApiUrl, UserResponse.class);
 
-		if (userApiResponse == null) {
+		if (userApiResponse.getBody() == null && !userApiResponse.getStatusCode().is2xxSuccessful()) {
 			return "User Not Found With The Given Aadhaar Number";
 		}
 
@@ -86,8 +84,12 @@ public class LoginService {
 		HttpEntity<UserRequest> requestEntity = new HttpEntity<>(userRequest);
 
 		ResponseEntity<UserResponse> userApiUpdateResponse = restTemplate.exchange(
-				userServiceUrl + updateUserUrl + aadhaarNumber, HttpMethod.PUT, requestEntity, UserResponse.class);
-		if (userApiUpdateResponse == null) {
+				userServiceUrl + updateUserUrl + aadhaarNumber,
+				HttpMethod.PUT, 
+				requestEntity, 
+				UserResponse.class);
+		
+		if (userApiUpdateResponse.getBody() == null && !userApiUpdateResponse.getStatusCode().is2xxSuccessful()) {
 			return "Password not updated";
 		}
 
@@ -98,11 +100,10 @@ public class LoginService {
 
 		ResponseEntity<String> emailApiResponse = restTemplate.postForEntity(messageServiceUrl, emailRequest,
 				String.class);
-		if (emailApiResponse.getBody().isEmpty()) {
+		if (emailApiResponse.getBody()== null && !emailApiResponse.getStatusCode().is2xxSuccessful()) {
 			return "Email not Sent";
 		} else {
-			return "Password Sent to " + emailRequest.getToEmail() + " ! Check Once and the password is : "
-					+ userRequest.getPassword();
+			return "Password Sent to " + emailRequest.getToEmail() + " ! Check Once ";
 		}
 
 	}
