@@ -1,6 +1,7 @@
 package com.pst.login.service;
 
 import com.pst.login.request.EmailRequest;
+import com.pst.login.request.LoginRequest;
 import com.pst.login.request.UserRequest;
 import com.pst.login.response.UserResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,7 @@ public class LoginService {
         return (messageServiceResponse == null) ? "Failed to send OTP" : "OTP sent to: " + userResponse.getEmail();
     }
     
+
     /**
      * It generates the password and it will send to the email
      * @param aadhaarNumber
@@ -111,5 +113,25 @@ public class LoginService {
 			return "Password Sent to " + emailRequest.getToEmail() + " ! Check Once ";
 		}
 
+	}
+ 
+	/**
+   	 * It check password and navigate to the dashboard 
+   	 * @param loginRequest
+   	 * @return String
+   	 */
+	public String verifyPasswordAndLogin(LoginRequest loginRequest) {
+
+		long aadhaarNumber = loginRequest.getAadhaarNumber();
+		String password = loginRequest.getPassword();
+
+		ResponseEntity<UserResponse> userResponse = restTemplate.getForEntity(userServiceUrl + aadhaarNumber,
+				UserResponse.class);
+
+		if (userResponse.getBody().getPassword().equals(password)) {
+			return "login successfully";
+		} else {
+			return "wrong password";
+		}
 	}
 }
