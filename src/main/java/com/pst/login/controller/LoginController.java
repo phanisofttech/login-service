@@ -1,9 +1,11 @@
 package com.pst.login.controller;
 
+import com.pst.login.request.LoginRequest;
 import com.pst.login.service.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,6 +21,7 @@ public class LoginController {
         return loginService.generateAndSendOtp(aadhaarNumber);
     }
     
+
     /**
      * It generates and send the password via email and also Stored in database 
      * @param aadhaarNumber
@@ -29,4 +32,15 @@ public class LoginController {
    	public String generateAndSendPassword(@PathVariable long aadhaarNumber, @PathVariable int otp) {
    		return loginService.generateAndSendPassword(aadhaarNumber, otp);
    	}
+
+   	/**
+   	 * It verify password and navigate to the dashboard page
+   	 * @param loginRequest
+   	 * @return String
+   	 */
+	@PostMapping
+	public String verifyPasswordAndLogin(@RequestBody LoginRequest loginRequest) {
+		return loginService.verifyPasswordAndLogin(loginRequest);
+	}
+
 }
