@@ -35,7 +35,7 @@ public class LoginService {
         UserResponse userResponse = restTemplate.getForObject(userServiceUrl + aadhaarNumber, UserResponse.class);
 
         if (userResponse == null) { 
-            return "User not found.";
+            throw new RuntimeException( "User not found.");
         }
 
         int otp = 100000 + new Random().nextInt(900000);
@@ -53,7 +53,7 @@ public class LoginService {
         );
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            return "Failed to update user.";
+            throw new RuntimeException("Failed to update user.") ;
         }
 
         EmailRequest emailRequest = new EmailRequest(userResponse.getEmail(), "Your OTP Code", "Your OTP is: " + otp);
@@ -103,7 +103,7 @@ public class LoginService {
 		EmailRequest emailRequest = new EmailRequest();
 		emailRequest.setToEmail(userApiResponse.getBody().getEmail());
 		emailRequest.setBody("Your password is : " + password);
-		emailRequest.setSubject("Login Service Password");
+		emailRequest.setSubject("Your Password For RDCRMS");
 
 		ResponseEntity<String> emailApiResponse = restTemplate.postForEntity(messageServiceUrl, emailRequest,
 				String.class);
