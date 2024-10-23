@@ -3,11 +3,13 @@ package com.pst.login.service;
 import com.pst.login.request.EmailRequest;
 import com.pst.login.request.LoginRequest;
 import com.pst.login.request.UserRequest;
+import com.pst.login.response.LoginResponse;
 import com.pst.login.response.UserResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -17,72 +19,86 @@ import java.util.UUID;
 @Service
 public class LoginService {
 
-    @Autowired
-    private RestTemplate restTemplate;
+	@Autowired
+	private RestTemplate restTemplate;
 
-    @Value("${user_service_url}")
-    private String userServiceUrl;
+	@Value("${user_service_url}")
+	private String userServiceUrl;
 
-    @Value("${message_service_url}")
-    private String messageServiceUrl;
+	@Value("${message_service_url}")
+	private String messageServiceUrl;
 
-    private final String updateUserUrl = "/update-user/";
-    
-    private String password;
+	private final String updateUserUrl = "/update-user/";
 
-    public String generateAndSendOtp(long aadhaarNumber) {
+	private String password;
 
-        UserResponse userResponse = restTemplate.getForObject(userServiceUrl + aadhaarNumber, UserResponse.class);
+	private LoginResponse loginResponse;
 
-        if (userResponse == null) { 
-            throw new RuntimeException( "User not found.");
-        }
+	/**
+	 * It generate and send the otp via email
+	 * 
+	 * @param aadhaarNumber
+	 * @return {@link LoginResponse}
+	 */
+	public LoginResponse generateAndSendOtp(long aadhaarNumber) {
 
-        int otp = 100000 + new Random().nextInt(900000);
+		UserResponse userResponse = restTemplate.getForObject(userServiceUrl + aadhaarNumber, UserResponse.class);
 
-        UserRequest userRequest = new UserRequest(userResponse);
-        userRequest.setOtp(otp);
+		if (userResponse == null) {
+			return loginResponse = new LoginResponse("User not found with the Aadhaar Number", HttpStatus.NOT_FOUND,
+					HttpStatus.NOT_FOUND.value());
+		}
 
-        HttpEntity<UserRequest> requestEntity = new HttpEntity<>(userRequest);
+		int otp = 100000 + new Random().nextInt(900000);
 
-        ResponseEntity<UserResponse> response = restTemplate.exchange(
-                userServiceUrl + updateUserUrl + aadhaarNumber,
-                HttpMethod.PUT,
-                requestEntity,
-                UserResponse.class
-        );
+		UserRequest userRequest = new UserRequest(userResponse);
+		userRequest.setOtp(otp);
 
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Failed to update user.") ;
-        }
+		HttpEntity<UserRequest> requestEntity = new HttpEntity<>(userRequest);
 
-        EmailRequest emailRequest = new EmailRequest(userResponse.getEmail(), "Your OTP Code", "Your OTP is: " + otp);
-        String messageServiceResponse = restTemplate.postForObject(messageServiceUrl, emailRequest, String.class);
+		ResponseEntity<UserResponse> response = restTemplate.exchange(userServiceUrl + updateUserUrl + aadhaarNumber,
+				HttpMethod.PUT, requestEntity, UserResponse.class);
 
-        return (messageServiceResponse == null) ? "Failed to send OTP" : "OTP sent to: " + userResponse.getEmail();
-    }
-    
+		if (!response.getStatusCode().is2xxSuccessful()) {
+			return loginResponse = new LoginResponse("Failed to save OTP", HttpStatus.INTERNAL_SERVER_ERROR,
+					HttpStatus.INTERNAL_SERVER_ERROR.value());
+		}
 
-    /**
-     * It generates the password and it will send to the email
-     * @param aadhaarNumber
-     * @param otp
-     * @return String
-     */
-	public String generateAndSendPassword(long aadhaarNumber, int otp) {
+		EmailRequest emailRequest = new EmailRequest(userResponse.getEmail(), "Your OTP Code", "Your OTP is: " + otp);
+		String messageServiceResponse = restTemplate.postForObject(messageServiceUrl, emailRequest, String.class);
+
+		if (messageServiceResponse == null) {
+			return loginResponse = new LoginResponse("Failed to send OTP", HttpStatus.INTERNAL_SERVER_ERROR,
+					HttpStatus.INTERNAL_SERVER_ERROR.value());
+		} else {
+			return loginResponse = new LoginResponse("OTP Sent to " + userResponse.getEmail() + " ! Check Once ",
+					HttpStatus.OK, HttpStatus.OK.value());
+		}
+	}
+
+	/**
+	 * It generates the password and it will send to the email
+	 * 
+	 * @param aadhaarNumber
+	 * @param otp
+	 * @return{@link LoginResponse}
+	 */
+	public LoginResponse generateAndSendPassword(long aadhaarNumber, int otp) {
 
 		String userApiUrl = userServiceUrl + aadhaarNumber;
 
 		ResponseEntity<UserResponse> userApiResponse = restTemplate.getForEntity(userApiUrl, UserResponse.class);
 
 		if (userApiResponse.getBody() == null) {
-			throw new RuntimeException("User not found with the Aadhaar Number");
+			return loginResponse = new LoginResponse("User not found with the Aadhaar Number", HttpStatus.NOT_FOUND,
+					HttpStatus.NOT_FOUND.value());
 		}
 
 		if (userApiResponse.getBody().getOtp() == otp) {
 			password = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
 		} else {
-			return "Incorrect OTP";
+			return loginResponse = new LoginResponse("Incorrect OTP", HttpStatus.UNAUTHORIZED,
+					HttpStatus.UNAUTHORIZED.value());
 		}
 
 		UserRequest userRequest = new UserRequest(userApiResponse.getBody());
@@ -91,13 +107,11 @@ public class LoginService {
 		HttpEntity<UserRequest> requestEntity = new HttpEntity<>(userRequest);
 
 		ResponseEntity<UserResponse> userApiUpdateResponse = restTemplate.exchange(
-				userServiceUrl + updateUserUrl + aadhaarNumber,
-				HttpMethod.PUT, 
-				requestEntity, 
-				UserResponse.class);
-		
+				userServiceUrl + updateUserUrl + aadhaarNumber, HttpMethod.PUT, requestEntity, UserResponse.class);
+
 		if (userApiUpdateResponse.getBody() == null) {
-			throw new RuntimeException("Failed to send password");
+			return loginResponse = new LoginResponse("Failed to send password", HttpStatus.INTERNAL_SERVER_ERROR,
+					HttpStatus.INTERNAL_SERVER_ERROR.value());
 		}
 
 		EmailRequest emailRequest = new EmailRequest();
@@ -108,30 +122,35 @@ public class LoginService {
 		ResponseEntity<String> emailApiResponse = restTemplate.postForEntity(messageServiceUrl, emailRequest,
 				String.class);
 		if (emailApiResponse.getBody().isEmpty()) {
-			throw new RuntimeException("Failed to send E-mail");
+			return loginResponse = new LoginResponse("Failed to send E-mail", HttpStatus.INTERNAL_SERVER_ERROR,
+					HttpStatus.INTERNAL_SERVER_ERROR.value());
 		} else {
-			return "Password Sent to " + emailRequest.getToEmail() + " ! Check Once ";
+			return loginResponse = new LoginResponse("Password Sent to " + emailRequest.getToEmail() + " ! Check Once ",
+					HttpStatus.OK, HttpStatus.OK.value());
 		}
-
 	}
- 
+
 	/**
-   	 * It check password and navigate to the dashboard 
-   	 * @param loginRequest
-   	 * @return String
-   	 */
-	public String verifyPasswordAndLogin(LoginRequest loginRequest) {
+	 * It check password and navigate to the dashboard
+	 * 
+	 * @param loginRequest
+	 * @return {@link LoginResponse}
+	 */
+	public LoginResponse verifyPasswordAndLogin(LoginRequest loginRequest) {
 
 		long aadhaarNumber = loginRequest.getAadhaarNumber();
 		String password = loginRequest.getPassword();
 
 		ResponseEntity<UserResponse> userResponse = restTemplate.getForEntity(userServiceUrl + aadhaarNumber,
 				UserResponse.class);
-
-		if (userResponse.getBody().getPassword().equals(password)) {
-			return "login successfully";
-		} else {
-			return "wrong password";
+		if (userResponse.getBody() == null) {
+			return loginResponse = new LoginResponse("User not found with the Aadhaar Number", HttpStatus.NOT_FOUND,
+					HttpStatus.NOT_FOUND.value());
 		}
+		if (userResponse.getBody().getPassword().equals(password)) {
+			return loginResponse = new LoginResponse("Login successfull", HttpStatus.OK, HttpStatus.OK.value());
+		}
+		return loginResponse;
 	}
+
 }

@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
-import com.pst.login.response.MessageResponse;
+import com.pst.login.response.LoginResponse;
 
 @Configuration
 public class LoginConfiguration {
@@ -13,8 +13,4 @@ public class LoginConfiguration {
         return new RestTemplate();
     }
     
-    @Bean
-    public MessageResponse messageResponse() {
-    	return new MessageResponse();
-    }
 }
