@@ -21,7 +21,6 @@ public class LoginController {
 
 	/**
 	 * It generate and send the otp via email
-	 * 
 	 * @param aadhaarNumber
 	 * @return {@link LoginResponse}
 	 */
@@ -32,7 +31,6 @@ public class LoginController {
 
 	/**
 	 * It generates and send the password via email and also Stored in database
-	 * 
 	 * @param aadhaarNumber
 	 * @param otp
 	 * @return {@link LoginResponse}
@@ -44,7 +42,6 @@ public class LoginController {
 
 	/**
 	 * It verify password and navigate to the dashboard page
-	 * 
 	 * @param loginRequest
 	 * @return {@link LoginResponse}
 	 */

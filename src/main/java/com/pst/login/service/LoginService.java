@@ -36,7 +36,6 @@ public class LoginService {
 
 	/**
 	 * It generate and send the otp via email
-	 * 
 	 * @param aadhaarNumber
 	 * @return {@link LoginResponse}
 	 */
@@ -78,7 +77,6 @@ public class LoginService {
 
 	/**
 	 * It generates the password and it will send to the email
-	 * 
 	 * @param aadhaarNumber
 	 * @param otp
 	 * @return{@link LoginResponse}
@@ -132,7 +130,6 @@ public class LoginService {
 
 	/**
 	 * It check password and navigate to the dashboard
-	 * 
 	 * @param loginRequest
 	 * @return {@link LoginResponse}
 	 */
