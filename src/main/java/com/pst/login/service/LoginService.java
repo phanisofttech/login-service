@@ -144,10 +144,12 @@ public class LoginService {
 			return loginResponse = new LoginResponse("User not found with the Aadhaar Number", HttpStatus.NOT_FOUND,
 					HttpStatus.NOT_FOUND.value());
 		}
-		if (userResponse.getBody().getPassword().equals(password)) {
+		
+		if (!userResponse.getBody().getPassword().equals(password)) {
+			return loginResponse = new LoginResponse("Login failed", HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value());
+		}else {
 			return loginResponse = new LoginResponse("Login successfull", HttpStatus.OK, HttpStatus.OK.value());
 		}
-		return loginResponse;
 	}
 
 }
