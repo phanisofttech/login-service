@@ -1,6 +1,8 @@
 package com.pst.login.request;
 
 import com.pst.login.response.UserResponse;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.sql.Blob;
@@ -8,6 +10,7 @@ import java.sql.Date;
 
 @NoArgsConstructor
 @Data
+@AllArgsConstructor
 public class UserRequest {
     private long aadhaarNumber;
     private String userFirstName;
