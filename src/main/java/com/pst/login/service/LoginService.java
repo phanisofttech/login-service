@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
 import java.util.Random;
 import java.util.UUID;
 
@@ -29,8 +30,6 @@ public class LoginService {
 	private String messageServiceUrl;
 
 	private final String updateUserUrl = "/update-user/";
-
-	private String password;
 
 	private LoginResponse loginResponse;
 
@@ -63,14 +62,28 @@ public class LoginService {
 					HttpStatus.INTERNAL_SERVER_ERROR.value());
 		}
 
-		EmailRequest emailRequest = new EmailRequest(userResponse.getEmail(), "Your OTP Code", "Your OTP is: " + otp);
+		String subject = "Your OTP for Secure Access – Real Time Monitoring System Dashboard";
+
+		String message = "<html><body>"
+				+ "<p>Dear <b>" + userResponse.getUserFirstName() + "</b>,</p>"
+				+ "<p>Your One-Time Password (OTP) for accessing the <b>Real Time Monitoring System Dashboard for Revenue Department Certificates</b> is:</p>"
+				+ "<h2 style='color:blue;'>🔑 " + otp + "</h2>"
+				+ "<p>This OTP is valid for <b>10 minutes</b>. Please do not share it with anyone for security reasons.</p>"
+				+ "<p>If you did not request this OTP, please ignore this email or contact our support team immediately.</p>"
+				+ "<hr>"
+				+ "<p><b>⚠ Confidentiality Notice:</b> This email contains confidential information intended only for the recipient. If you received it in error, please delete it and notify us immediately.</p>"
+				+ "</body></html>";
+
+		EmailRequest emailRequest = new EmailRequest(userResponse.getEmail(), subject, message);
+
+
 		String messageServiceResponse = restTemplate.postForObject(messageServiceUrl, emailRequest, String.class);
 
 		if (messageServiceResponse == null) {
 			return loginResponse = new LoginResponse("Failed to send OTP", HttpStatus.INTERNAL_SERVER_ERROR,
 					HttpStatus.INTERNAL_SERVER_ERROR.value());
 		} else {
-			return loginResponse = new LoginResponse("OTP Sent to " + userResponse.getEmail() + " ! Check Once ",
+			return loginResponse = new LoginResponse("OTP sent to  " + userResponse.getEmail() + " successfully! Please check your inbox.",
 					HttpStatus.OK, HttpStatus.OK.value());
 		}
 	}
@@ -82,6 +95,8 @@ public class LoginService {
 	 * @return{@link LoginResponse}
 	 */
 	public LoginResponse generateAndSendPassword(long aadhaarNumber, int otp) {
+
+		String password;
 
 		String userApiUrl = userServiceUrl + aadhaarNumber;
 
@@ -112,18 +127,37 @@ public class LoginService {
 					HttpStatus.INTERNAL_SERVER_ERROR.value());
 		}
 
-		EmailRequest emailRequest = new EmailRequest();
-		emailRequest.setToEmail(userApiResponse.getBody().getEmail());
-		emailRequest.setBody("Your password is : " + password);
-		emailRequest.setSubject("Your Password For RDCRMS");
 
-		ResponseEntity<String> emailApiResponse = restTemplate.postForEntity(messageServiceUrl, emailRequest,
-				String.class);
-		if (emailApiResponse.getBody().isEmpty()) {
+		String subject = "Your Secure Password – Real Time Monitoring System Dashboard";
+
+		String message = "<html><body>"
+				+ "<p>Dear <b>" + userApiResponse.getBody().getUserFirstName() + "</b>,</p>"
+				+ "<p>Your new password for accessing the <b>Real Time Monitoring System Dashboard for Revenue Department Certificates</b> is:</p>"
+				+ "<h2 style='color:blue;'>🔑 " + password + "</h2>"
+				+ "<p>Keep your password secure and do not share it with anyone.</p>"
+				+ "<p>If you did not request this password reset, please contact our support team immediately.</p>"
+				+ "<hr>"
+				+ "<p><b>⚠ Confidentiality Notice:</b> This email contains confidential information intended only for the recipient. If you received it in error, please delete it and notify us immediately.</p>"
+				+ "</body></html>";
+
+
+		EmailRequest emailRequest = new EmailRequest(userApiResponse.getBody().getEmail(), subject, message);
+		HttpEntity<EmailRequest> emailEntity = new HttpEntity<>(emailRequest);
+
+		ResponseEntity<String> emailApiResponse = restTemplate.exchange(
+				messageServiceUrl,
+				HttpMethod.POST,
+				emailEntity,
+				String.class
+		);
+
+
+		if (!emailApiResponse.getStatusCode().is2xxSuccessful()) {
+
 			return loginResponse = new LoginResponse("Failed to send E-mail", HttpStatus.INTERNAL_SERVER_ERROR,
 					HttpStatus.INTERNAL_SERVER_ERROR.value());
 		} else {
-			return loginResponse = new LoginResponse("Password Sent to " + emailRequest.getToEmail() + " ! Check Once ",
+			return loginResponse = new LoginResponse("Password sent to " + emailRequest.getToEmail() + " successfully! Please check your inbox.",
 					HttpStatus.OK, HttpStatus.OK.value());
 		}
 	}
